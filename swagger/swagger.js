@@ -23,7 +23,7 @@ const options = {
     },
     servers: [
       {
-        url: "https://codemong-backend-02.onrender.com", // ✅ Render 주소만 사용
+        url: "https://codemong-backend02.onrender.com", // ✅ Render 주소만 사용
         description: "Render production server",
       },
     ],
