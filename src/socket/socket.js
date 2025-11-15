@@ -12,8 +12,8 @@ let io;
 export function initSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: true,       // Netlify 프론트 도메인에서 접근 허용
-      credentials: true,  // 쿠키 포함 허용
+      origin: true, // Netlify 프론트 도메인에서 접근 허용
+      credentials: true, // 쿠키 포함 허용
     },
   });
 
@@ -75,7 +75,9 @@ export function initSocket(server) {
     socket.join(room);
 
     socket.on("disconnect", () => {
-      console.log(`❌ WebSocket disconnected: user=${userId}, socket=${socket.id}`);
+      console.log(
+        `❌ WebSocket disconnected: user=${userId}, socket=${socket.id}`
+      );
     });
   });
 }
