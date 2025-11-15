@@ -1,0 +1,43 @@
+{
+  "name": "codemong-backend",
+  "version": "1.0.0",
+  "description": "코드몽 백엔드 Repository 입니다.",
+  "main": "node server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "migrate:deploy": "npx prisma migrate deploy",
+    "start:prod": "npm run migrate:deploy && npm run start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sku-codemong/codemong-Backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sku-codemong/codemong-Backend/issues"
+  },
+  "homepage": "https://github.com/sku-codemong/codemong-Backend#readme",
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "bcrypt": "^6.0.0",
+    "cookie": "^1.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  }
+}

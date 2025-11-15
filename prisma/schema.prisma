@@ -1,0 +1,213 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+//// ERD 기반 ENUM ////
+enum Gender {
+  Male
+  Female
+}
+
+enum StudySource {
+  timer
+  manual
+}
+
+enum StudyStatus {
+  running
+  stopped
+}
+
+/**
+ * 작업 유형
+ * (요청: assignment만 유지)
+ */
+enum TaskType {
+  assignment
+}
+
+/**
+ * 작업 상태
+ * (요청: archived 제거)
+ */
+enum TaskStatus {
+  todo
+  in_progress
+  done
+}
+
+/**
+ * 친구 요청 상태
+ */
+enum FriendRequestStatus {
+  pending   // 대기중
+  accepted  // 수락됨
+  rejected  // 거절됨
+  canceled  // 보낸 사람이 취소
+}
+
+//// users ////
+model users {
+  id            Int     @id @default(autoincrement())
+  email         String  @unique @db.VarChar(50)
+  password_hash String  @db.VarChar(100)
+  nickname      String? @db.VarChar(50)
+  grade         Int?
+  gender        Gender?
+  is_completed  Boolean @default(false)
+
+  daily_target_min Int @default(0) // 하루 목표 총 공부 시간(분)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // relations
+  subjects       subjects[]
+  sessions       sessions[]
+  refresh_tokens refresh_token[]
+  tasks          subject_tasks[]
+
+  // 친구 기능 relations
+  friend_requests_sent     friend_requests[] @relation("FriendRequestsFrom")
+  friend_requests_received friend_requests[] @relation("FriendRequestsTo")
+
+  friends       friends[] @relation("UserFriends")
+  friends_of_me friends[] @relation("UserFriendsFriend")
+
+  @@index([nickname])
+}
+
+//// subjects ////
+model subjects {
+  id      Int     @id @default(autoincrement())
+  user_id Int
+  name    String  @db.VarChar(100)
+  color   String? @db.VarChar(20)
+
+  // ⬇️ 주 → 일 단위로 필드 교체
+  target_daily_min Int @default(0)
+
+  // ⬇️ 가중치 계산의 입력값
+  credit     Decimal? @db.Decimal(3, 1) // 학점 (예: 3.0)
+  // 요청: 난이도 enum → 정수(1~5)
+  difficulty Int      @default(3) @db.SmallInt // 1(매우 쉬움) ~ 5(매우 어려움)
+
+  // ⬇️ 최종 분배 가중치(서비스에서 계산하여 캐시)
+  weight Decimal @default(1.00) @db.Decimal(5, 2)
+
+  archived Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // relations
+  user     users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  sessions sessions[]
+  tasks    subject_tasks[]
+
+  @@unique([user_id, name])
+  @@index([user_id])
+}
+
+//// sessions (공부 기록) ////
+model sessions {
+  id           Int         @id @default(autoincrement())
+  user_id      Int
+  subject_id   Int
+  start_at     DateTime
+  end_at       DateTime?
+  duration_sec Int         @default(0)
+  source       StudySource @default(timer)
+  status       StudyStatus @default(running)
+
+  // ⬇️ 세션별 학습 노트 (선택)
+  note         String?     @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // relations
+  user    users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subject subjects @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, start_at])
+  @@index([subject_id, start_at])
+}
+
+//// subject_tasks (과제/프로젝트/시험 등) ////
+model subject_tasks {
+  id            Int        @id @default(autoincrement())
+  user_id       Int
+  subject_id    Int? // 과목 없는 일반 작업도 허용
+  type          TaskType   @default(assignment)
+  title         String     @db.VarChar(200)
+  description   String?    @db.Text
+  due_at        DateTime?
+  estimated_min Int? // 예상 소요 시간(분)
+  status        TaskStatus @default(todo)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // relations
+  user    users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subject subjects? @relation(fields: [subject_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id, status, due_at])
+  @@index([subject_id, status])
+}
+
+//// refresh_token ////
+model refresh_token {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @db.Text
+  updated_at DateTime @updatedAt
+
+  // relations
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+//// friend_requests (친구 요청) ////
+model friend_requests {
+  id           Int                  @id @default(autoincrement())
+  from_user_id Int
+  to_user_id   Int
+  status       FriendRequestStatus  @default(pending)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // relations
+  from_user users @relation("FriendRequestsFrom", fields: [from_user_id], references: [id], onDelete: Cascade)
+  to_user   users @relation("FriendRequestsTo",   fields: [to_user_id],   references: [id], onDelete: Cascade)
+
+  // 같은 쌍에 중복 요청 방지
+  @@unique([from_user_id, to_user_id])
+  @@index([to_user_id, status])
+  @@index([from_user_id, status])
+}
+
+//// friends (친구 관계) ////
+model friends {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  friend_user_id Int
+  created_at     DateTime @default(now())
+
+  // relations
+  user        users @relation("UserFriends",       fields: [user_id],        references: [id], onDelete: Cascade)
+  friend_user users @relation("UserFriendsFriend", fields: [friend_user_id], references: [id], onDelete: Cascade)
+
+  // 같은 방향 중복 방지 (user_id 기준)
+  @@unique([user_id, friend_user_id])
+  @@index([user_id])
+}
