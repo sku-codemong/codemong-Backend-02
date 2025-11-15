@@ -2,10 +2,10 @@
   "name": "codemong-backend",
   "version": "1.0.0",
   "description": "코드몽 백엔드 Repository 입니다.",
-  "main": "node server.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "node server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "migrate:deploy": "npx prisma migrate deploy",
