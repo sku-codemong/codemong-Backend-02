@@ -14,7 +14,7 @@ import userRouter from "./user/router/user.router.js";
 import subjectTasksRouter from "./subject-tasks/router/subject-tasks.router.js";
 import sessionsRouter from "./session/router/session.router.js";
 import sessionReportRouter from "./session/router/session.report.router.js";
-import friendRouter from "./friend/router/friend.router.js";
+import friendsRouter from "./friend/router/friend.router.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -69,9 +69,5 @@ app.use(
   requireAuth({ allowCookie: true, cookieName: "at" }),
   friendsRouter
 );
-// ✅ 마지막에 서버 시작
-app.listen(PORT, () => {
-  console.log(`서버 열림 - 포트 : ${PORT}`);
-});
 
 export default app;
