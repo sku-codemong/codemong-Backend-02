@@ -53,3 +53,28 @@ export class DeleteFriendRequestDTO {
     this.friendUserId = Number(friendUserId);
   }
 }
+export class GetFriendProfileRequestDTO {
+  constructor({ currentUserId, friendUserId }) {
+    this.currentUserId = Number(currentUserId);
+    this.friendUserId = Number(friendUserId);
+  }
+}
+
+export class GetFriendSessionsRequestDTO {
+  constructor({ currentUserId, friendUserId, date }) {
+    this.currentUserId = Number(currentUserId);
+    this.friendUserId = Number(friendUserId);
+    this.date = date; // "2025-11-16" 같은 문자열
+  }
+}
+
+export class GetFriendSubjectsRequestDTO {
+  constructor({ currentUserId, friendUserId, includeArchived }) {
+    this.currentUserId = Number(currentUserId);
+    this.friendUserId = Number(friendUserId);
+    this.includeArchived =
+      typeof includeArchived === "string"
+        ? includeArchived === "true"
+        : !!includeArchived;
+  }
+}

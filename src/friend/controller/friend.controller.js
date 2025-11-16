@@ -8,6 +8,9 @@ import {
   RespondFriendRequestRequestDTO,
   GetFriendsRequestDTO,
   DeleteFriendRequestDTO,
+  GetFriendProfileRequestDTO,
+  GetFriendSubjectsRequestDTO,
+  GetFriendSessionsRequestDTO,
 } from "../dto/friend.request.dto.js";
 
 import {
@@ -18,6 +21,9 @@ import {
   respondToFriendRequest,
   getFriends,
   deleteFriend,
+  getFriendProfile,
+  getFriendSubjects,
+  getFriendSessions,
 } from "../service/friend.service.js";
 
 /**
@@ -152,5 +158,85 @@ export const deleteFriendController = async (req, res, next) => {
     return res.json(result);
   } catch (err) {
     next(err);
+  }
+};
+
+/**
+ * 친구 프로필 조회 컨트롤러
+ * GET /api/friends/:friendUserId/profile
+ */
+export const getFriendProfileController = async (req, res, next) => {
+  try {
+    const dto = new GetFriendProfileRequestDTO({
+      currentUserId: req.user.id,
+      friendUserId: req.params.friendUserId,
+    });
+
+    const result = await getFriendProfile(dto);
+
+    if (!result.ok) {
+      return res.status(result.status ?? 400).json({
+        ok: false,
+        error: result.error,
+      });
+    }
+
+    return res.status(200).json(result);
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * 친구 과목 목록 조회 컨트롤러
+ * GET /api/friends/:friendUserId/subjects
+ */
+export const getFriendSubjectsController = async (req, res, next) => {
+  try {
+    const dto = new GetFriendSubjectsRequestDTO({
+      currentUserId: req.user.id,
+      friendUserId: req.params.friendUserId,
+      includeArchived: req.query.includeArchived,
+    });
+
+    const result = await getFriendSubjects(dto);
+
+    if (!result.ok) {
+      return res.status(result.status ?? 400).json({
+        ok: false,
+        error: result.error,
+      });
+    }
+
+    return res.status(200).json(result);
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * 친구 세션 목록 조회 컨트롤러
+ * GET /api/friends/:friendUserId/sessions
+ */
+export const getFriendSessionsController = async (req, res, next) => {
+  try {
+    const dto = new GetFriendSessionsRequestDTO({
+      currentUserId: req.user.id,
+      friendUserId: req.params.friendUserId,
+      date: req.query.date,
+    });
+
+    const result = await getFriendSessions(dto);
+
+    if (!result.ok) {
+      return res.status(result.status ?? 400).json({
+        ok: false,
+        error: result.error,
+      });
+    }
+
+    return res.status(200).json(result);
+  } catch (e) {
+    next(e);
   }
 };

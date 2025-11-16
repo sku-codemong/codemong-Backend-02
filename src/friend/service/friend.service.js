@@ -12,6 +12,9 @@ import {
   createFriendsForBoth,
   getFriendsByUserId,
   deleteFriendBothSides,
+  findUserProfileById,
+  getSubjectsByUserId,
+  getSessionsByUserAndRange,
 } from "../repository/friend.repository.js";
 
 // 🔔 WebSocket 이벤트 import
@@ -226,4 +229,169 @@ export const getFriends = async (dto) => {
 export const deleteFriend = async (dto) => {
   await deleteFriendBothSides(dto.currentUserId, dto.friendUserId);
   return { ok: true };
+};
+
+/**
+ * 친구 프로필 조회
+ * @param {import("../dto/friend.request.dto.js").GetFriendProfileRequestDTO} dto
+ */
+export const getFriendProfile = async (dto) => {
+  const { currentUserId, friendUserId } = dto;
+
+  // 1. 자기 자신이면 그냥 내 프로필 API 쓰라고 막아도 되고, 허용해도 되고
+  if (currentUserId === friendUserId) {
+    return {
+      ok: false,
+      status: 400,
+      error: "자기 자신의 프로필은 /api/user/me API를 사용해주세요.",
+    };
+  }
+
+  // 2. 친구 관계인지 확인
+  const isFriend = await isAlreadyFriend(currentUserId, friendUserId);
+  if (!isFriend) {
+    return {
+      ok: false,
+      status: 403,
+      error: "친구가 아닌 사용자의 프로필은 조회할 수 없습니다.",
+    };
+  }
+
+  // 3. 친구 유저 프로필 조회
+  const user = await findUserProfileById(friendUserId);
+  if (!user) {
+    return {
+      ok: false,
+      status: 404,
+      error: "해당 사용자를 찾을 수 없습니다.",
+    };
+  }
+
+  return {
+    ok: true,
+    user: toUserSummaryDto(user),
+  };
+};
+
+const toSubjectDto = (s) => ({
+  id: s.id,
+  name: s.name,
+  color: s.color,
+  target_daily_min: s.target_daily_min,
+  credit: s.credit ? Number(s.credit) : null,
+  difficulty: s.difficulty,
+  weight: s.weight ? Number(s.weight) : 1.0,
+  archived: s.archived,
+  created_at:
+    typeof s.created_at === "string"
+      ? s.created_at
+      : s.created_at.toISOString(),
+  updated_at:
+    typeof s.updated_at === "string"
+      ? s.updated_at
+      : s.updated_at.toISOString(),
+});
+
+/**
+ * 친구 과목 목록 조회
+ * @param {import("../dto/friend.request.dto.js").GetFriendSubjectsRequestDTO} dto
+ */
+export const getFriendSubjects = async (dto) => {
+  const { currentUserId, friendUserId, includeArchived } = dto;
+
+  if (currentUserId === friendUserId) {
+    return {
+      ok: false,
+      status: 400,
+      error: "자기 자신의 과목은 /api/subjects API를 사용해주세요.",
+    };
+  }
+
+  // 친구 관계인지 확인
+  const isFriend = await isAlreadyFriend(currentUserId, friendUserId);
+  if (!isFriend) {
+    return {
+      ok: false,
+      status: 403,
+      error: "친구가 아닌 사용자의 과목은 조회할 수 없습니다.",
+    };
+  }
+
+  const subjects = await getSubjectsByUserId(friendUserId, { includeArchived });
+
+  return {
+    ok: true,
+    items: subjects.map(toSubjectDto),
+  };
+};
+
+// 세션 응답 변환
+const toSessionDto = (s) => ({
+  id: s.id,
+  subject: s.subject
+    ? {
+        id: s.subject.id,
+        name: s.subject.name,
+        color: s.subject.color,
+      }
+    : null,
+  start_at:
+    typeof s.start_at === "string" ? s.start_at : s.start_at.toISOString(),
+  end_at: s.end_at
+    ? typeof s.end_at === "string"
+      ? s.end_at
+      : s.end_at.toISOString()
+    : null,
+  duration_sec: s.duration_sec,
+  source: s.source,
+  status: s.status,
+  note: s.note ?? null,
+});
+
+function getDayRange(dateStr) {
+  const start = new Date(dateStr + "T00:00:00.000Z");
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
+/**
+ * 친구 세션 목록 조회 (특정 날짜)
+ * @param {import("../dto/friend.request.dto.js").GetFriendSessionsRequestDTO} dto
+ */
+export const getFriendSessions = async (dto) => {
+  const { currentUserId, friendUserId, date } = dto;
+
+  if (!date) {
+    return {
+      ok: false,
+      status: 400,
+      error: "date 쿼리 파라미터가 필요합니다.",
+    };
+  }
+
+  if (currentUserId === friendUserId) {
+    return {
+      ok: false,
+      status: 400,
+      error: "자기 자신의 세션은 /api/sessions API를 사용해주세요.",
+    };
+  }
+
+  const isFriend = await isAlreadyFriend(currentUserId, friendUserId);
+  if (!isFriend) {
+    return {
+      ok: false,
+      status: 403,
+      error: "친구가 아닌 사용자의 세션은 조회할 수 없습니다.",
+    };
+  }
+
+  const { start, end } = getDayRange(date);
+  const sessions = await getSessionsByUserAndRange(friendUserId, start, end);
+
+  return {
+    ok: true,
+    items: sessions.map(toSessionDto),
+  };
 };
