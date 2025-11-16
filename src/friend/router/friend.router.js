@@ -8,6 +8,9 @@ import {
   respondToFriendRequestController,
   getFriendsController,
   deleteFriendController,
+  getFriendProfileController,
+  getFriendSubjectsController,
+  getFriendSessionsController,
 } from "../controller/friend.controller.js";
 
 const router = Router();
@@ -434,5 +437,163 @@ router.get("/friends", getFriendsController);
  *                   example: "삭제할 친구가 없습니다."
  */
 router.delete("/friends/:friendUserId", deleteFriendController);
+
+/**
+ * @swagger
+ * /api/friends/{friendUserId}/profile:
+ *   get:
+ *     summary: 친구 프로필 조회
+ *     description: "친구 관계가 맺어진 사용자의 기본 프로필 정보를 조회합니다."
+ *     tags: [Friends]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: friendUserId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 친구 유저 ID
+ *     responses:
+ *       "200":
+ *         description: 친구 프로필 정보
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 6
+ *                     email:
+ *                       type: string
+ *                       example: "friend@example.com"
+ *                     nickname:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "친구1"
+ *                     grade:
+ *                       type: integer
+ *                       nullable: true
+ *                       example: 3
+ *                     gender:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "Male"
+ *       "403":
+ *         description: 친구가 아닌 사용자에 대한 접근
+ *       "404":
+ *         description: 사용자를 찾을 수 없음
+ */
+router.get("/friends/:friendUserId/profile", getFriendProfileController);
+
+/**
+ * @swagger
+ * /api/friends/{friendUserId}/subjects:
+ *   get:
+ *     summary: 친구 과목 목록 조회
+ *     description: "친구 관계가 맺어진 사용자의 과목 목록을 조회합니다. 기본은 archived=false 과목만, includeArchived=true로 보관 과목도 포함할 수 있습니다."
+ *     tags: [Friends]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: friendUserId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 친구 유저 ID
+ *       - in: query
+ *         name: includeArchived
+ *         schema:
+ *           type: boolean
+ *           example: false
+ *         description: 보관(archived) 과목 포함 여부
+ *     responses:
+ *       "200":
+ *         description: 친구 과목 목록
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Subject'
+ *       "403":
+ *         description: 친구가 아닌 사용자에 대한 접근
+ *       "404":
+ *         description: 사용자를 찾을 수 없음
+ */
+router.get("/friends/:friendUserId/subjects", getFriendSubjectsController);
+
+/**
+ * @swagger
+ * /api/friends/{friendUserId}/sessions:
+ *   get:
+ *     summary: 친구 세션 목록 조회 (하루)
+ *     description: "지정한 날짜(date)의 친구 세션 목록을 조회합니다."
+ *     tags: [Friends]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: friendUserId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 친구 유저 ID
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-11-16"
+ *         description: 조회할 날짜 (YYYY-MM-DD)
+ *     responses:
+ *       "200":
+ *         description: 세션 목록
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer }
+ *                       subject:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           id: { type: integer }
+ *                           name: { type: string }
+ *                           color: { type: string, nullable: true }
+ *                       start_at: { type: string, format: date-time }
+ *                       end_at: { type: string, format: date-time, nullable: true }
+ *                       duration_sec: { type: integer }
+ *                       source: { type: string }
+ *                       status: { type: string }
+ *                       note: { type: string, nullable: true }
+ *       "400":
+ *         description: 잘못된 요청 (date 없음 등)
+ *       "403":
+ *         description: 친구가 아닌 사용자에 대한 접근
+ */
+router.get("/friends/:friendUserId/sessions", getFriendSessionsController);
 
 export default router;
