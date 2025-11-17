@@ -48,3 +48,12 @@ export class BaseResponseDTO {
     this.ok = ok;
   }
 }
+
+export class TotalStudyTimeResponseDTO {
+  constructor({ user_id, total_sec, total_min, total_hour }) {
+    this.user_id = user_id;
+    this.total_sec = total_sec;
+    this.total_min = total_min;
+    this.total_hour = total_hour;
+  }
+}
