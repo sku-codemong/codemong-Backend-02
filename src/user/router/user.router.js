@@ -3,7 +3,10 @@ import { Router } from "express";
 import {
   getMyProfile,
   updateMyProfile,
+  updateMyProfileImage,
 } from "../controller/user.controller.js";
+
+import { uploadProfileImage } from "../../upload/profile-image.s3.middleware.js";
 
 const router = Router();
 
@@ -39,6 +42,10 @@ const router = Router();
  *         is_completed:
  *           type: boolean
  *           example: false
+ *         profile_image_url:         # ⭐ 추가
+ *           type: string
+ *           nullable: true
+ *           example: "https://codemong-profile-images.s3.ap-southeast-2.amazonaws.com/profile/1/abc123.png"
  *         created_at:
  *           type: string
  *           format: date-time
@@ -127,5 +134,44 @@ router.get("/me", getMyProfile);
  *         description: 유저를 찾을 수 없음
  */
 router.patch("/me", updateMyProfile);
+
+/**
+ * @swagger
+ * /api/user/me/profile-image:
+ *   patch:
+ *     tags: [Users]
+ *     summary: 내 프로필 이미지 업로드/변경
+ *     description: S3에 이미지를 업로드하고, 해당 URL을 내 프로필에 저장합니다.
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               profile_image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: 수정된 프로필 정보 (프로필 이미지 URL 포함)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserProfileResponse'
+ *       400:
+ *         description: 잘못된 요청 (파일 없음 등)
+ *       401:
+ *         description: 인증 실패
+ *       404:
+ *         description: 유저를 찾을 수 없음
+ */
+router.patch(
+  "/me/profile-image",
+  uploadProfileImage.single("profile_image"),
+  updateMyProfileImage
+);
 
 export default router;

@@ -46,10 +46,10 @@ enum TaskStatus {
  * 친구 요청 상태
  */
 enum FriendRequestStatus {
-  pending   // 대기중
-  accepted  // 수락됨
-  rejected  // 거절됨
-  canceled  // 보낸 사람이 취소
+  pending // 대기중
+  accepted // 수락됨
+  rejected // 거절됨
+  canceled // 보낸 사람이 취소
 }
 
 //// users ////
@@ -63,6 +63,8 @@ model users {
   is_completed  Boolean @default(false)
 
   daily_target_min Int @default(0) // 하루 목표 총 공부 시간(분)
+
+  profile_image_url String? @db.VarChar(255)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -127,7 +129,7 @@ model sessions {
   status       StudyStatus @default(running)
 
   // ⬇️ 세션별 학습 노트 (선택)
-  note         String?     @db.Text
+  note String? @db.Text
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -178,17 +180,17 @@ model refresh_token {
 
 //// friend_requests (친구 요청) ////
 model friend_requests {
-  id           Int                  @id @default(autoincrement())
+  id           Int                 @id @default(autoincrement())
   from_user_id Int
   to_user_id   Int
-  status       FriendRequestStatus  @default(pending)
+  status       FriendRequestStatus @default(pending)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   // relations
   from_user users @relation("FriendRequestsFrom", fields: [from_user_id], references: [id], onDelete: Cascade)
-  to_user   users @relation("FriendRequestsTo",   fields: [to_user_id],   references: [id], onDelete: Cascade)
+  to_user   users @relation("FriendRequestsTo", fields: [to_user_id], references: [id], onDelete: Cascade)
 
   // 같은 쌍에 중복 요청 방지
   @@unique([from_user_id, to_user_id])
@@ -204,7 +206,7 @@ model friends {
   created_at     DateTime @default(now())
 
   // relations
-  user        users @relation("UserFriends",       fields: [user_id],        references: [id], onDelete: Cascade)
+  user        users @relation("UserFriends", fields: [user_id], references: [id], onDelete: Cascade)
   friend_user users @relation("UserFriendsFriend", fields: [friend_user_id], references: [id], onDelete: Cascade)
 
   // 같은 방향 중복 방지 (user_id 기준)
