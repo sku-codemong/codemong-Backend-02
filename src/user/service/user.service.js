@@ -36,3 +36,24 @@ export async function updateMyProfileService(userId, updateData) {
   const updated = await updateUserProfileById(userId, updateData);
   return updated;
 }
+
+/**
+ * ⭐ 프로필 이미지 전용 서비스
+ *   - S3에 업로드된 이미지 URL을 profile_image_url 컬럼에 저장
+ */
+export async function updateMyProfileImageService(userId, imageUrl) {
+  const existing = await findUserProfileById(userId);
+
+  if (!existing) {
+    const error = new Error("유저를 찾을 수 없습니다.");
+    error.status = 404;
+    throw error;
+  }
+
+  // profile_image_url 한 컬럼만 업데이트
+  const updated = await updateUserProfileById(userId, {
+    profile_image_url: imageUrl,
+  });
+
+  return updated;
+}

@@ -32,3 +32,16 @@ export const findUserDailyTarget = (user_id) => {
     select: { daily_target_min: true },
   });
 };
+
+// 특정 유저의 전체 공부 시간(초) 합계
+export const getTotalStudySecondsByUserId = (user_id) => {
+  return prisma.sessions.aggregate({
+    where: {
+      user_id,
+      status: "stopped", // 종료된 세션 기준
+    },
+    _sum: {
+      duration_sec: true,
+    },
+  });
+};

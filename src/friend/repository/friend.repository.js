@@ -183,3 +183,51 @@ export const deleteFriendBothSides = async (userId, friendUserId) => {
     });
   });
 };
+
+/**
+ * 친구 프로필 조회용: 기본 유저 정보
+ */
+export const findUserProfileById = async (userId) => {
+  return prisma.users.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      grade: true,
+      gender: true,
+    },
+  });
+};
+
+/**
+ * 특정 유저의 과목 목록 조회 (친구 보기용)
+ */
+export const getSubjectsByUserId = async (userId, { includeArchived }) => {
+  return prisma.subjects.findMany({
+    where: {
+      user_id: userId,
+      ...(includeArchived ? {} : { archived: false }),
+    },
+    orderBy: { created_at: "asc" },
+  });
+};
+
+/**
+ * 특정 유저의 세션을 날짜 범위로 조회 (친구 보기용)
+ */
+export const getSessionsByUserAndRange = async (userId, start, end) => {
+  return prisma.sessions.findMany({
+    where: {
+      user_id: userId,
+      start_at: {
+        gte: start,
+        lt: end,
+      },
+    },
+    include: {
+      subject: true, // 과목 이름/색 표시용
+    },
+    orderBy: { start_at: "asc" },
+  });
+};

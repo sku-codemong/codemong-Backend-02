@@ -73,13 +73,32 @@ const router = Router();
  *               recommended_min:
  *                 type: integer
  *                 example: 50
- * 
+ *
  *     ReportResponse:
  *       type: object
  *       properties:
  *         ok: { type: boolean }
  *         report:
  *           type: object
+ *
+ *     TotalStudyTime:
+ *       type: object
+ *       properties:
+ *         user_id:
+ *           type: integer
+ *           example: 3
+ *         total_sec:
+ *           type: integer
+ *           example: 43200
+ *           description: "총 공부 시간(초)"
+ *         total_min:
+ *           type: integer
+ *           example: 720
+ *           description: "총 공부 시간(분)"
+ *         total_hour:
+ *           type: integer
+ *           example: 12
+ *           description: "총 공부 시간(시간)"
  */
 
 /**
@@ -200,5 +219,37 @@ router.get("/recommend/today", ctrl.getTodayRecommendation);
  *                 daily_target_min: { type: integer, example: 180 }
  */
 router.patch("/daily-target", ctrl.updateDailyTarget);
+
+/**
+ * @swagger
+ * /api/sessions/total-time:
+ *   get:
+ *     summary: 전체 공부 시간 합계 조회
+ *     description: >
+ *       로그인된 유저 또는 쿼리로 전달한 user_id에 대한 전체 공부 시간 합계를 조회합니다.
+ *       status가 stopped인 세션의 duration_sec를 모두 합산합니다.
+ *     tags: [SessionReports]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: "조회할 유저 ID (없으면 현재 로그인한 유저)"
+ *     responses:
+ *       "200":
+ *         description: 전체 공부 시간 합계
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok: { type: boolean, example: true }
+ *                 total:
+ *                   $ref: '#/components/schemas/TotalStudyTime'
+ */
+router.get("/total-time", ctrl.getTotalStudyTime);
 
 export default router;

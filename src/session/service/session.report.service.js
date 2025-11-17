@@ -92,3 +92,18 @@ export const updateDailyTarget = async (user_id, dto) => {
   );
   return updatedUser.daily_target_min;
 };
+
+export const getTotalStudyTime = async (user_id) => {
+  const agg = await repo.getTotalStudySecondsByUserId(user_id);
+
+  const total_sec = agg._sum.duration_sec ?? 0;
+  const total_min = Math.floor(total_sec / 60);
+  const total_hour = Math.floor(total_min / 60);
+
+  return {
+    user_id,
+    total_sec,
+    total_min,
+    total_hour,
+  };
+};
