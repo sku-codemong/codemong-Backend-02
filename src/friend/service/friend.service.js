@@ -167,19 +167,20 @@ export const respondToFriendRequest = async (dto) => {
     await updateFriendRequestStatus(requestId, "accepted");
     await createFriendsForBoth(req.from_user_id, req.to_user_id);
 
+    // 🔹 from_user / to_user 둘 다 들어있는 DTO
+    const requestDto = toFriendRequestDto(req);
+
     // 🔔 WebSocket: 요청 보낸 사람(from_user)에게 결과 알림
     emitFriendRequestResponded(req.from_user_id, {
       type: "friend:request:responded",
       request_id: requestId,
       result: "accept",
-      friend: {
-        id: req.to_user.id,
-        nickname: req.to_user.nickname,
-        email: req.to_user.email,
-      },
+      from_user: requestDto.from_user, // ✅ 요청 보낸 사람 정보
+      to_user: requestDto.to_user, // ✅ 요청 받은 사람 정보
+      // 필요하면 아래처럼 통째로 보내도 됨: request: requestDto
     });
 
-    // HTTP 응답: 요청 처리한 사람(to_user) 입장에서는 친구=from_user
+    // HTTP 응답: 요청 처리한 사람(to_user) 입장에서는 친구 = from_user
     return {
       ok: true,
       result: "accept",
