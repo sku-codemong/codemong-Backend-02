@@ -56,7 +56,11 @@ export const login = async (req, res, next) => {
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
 
     // 바디에는 민감정보 빼고 유저만
-    return res.status(200).json({ ok: true, user });
+    return res.status(200).json({
+      ok: true,
+      user,
+      accessToken, // ← 이거 추가
+    });
   } catch (e) {
     next(e);
   }
@@ -84,8 +88,11 @@ export const refresh = async (req, res, next) => {
     res.cookie(accessCookieName, accessToken, accessCookieOptions);
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
 
-    // 바디에는 토큰 전달 X
-    return res.status(200).json({ ok: true });
+    // ✅ 바디에도 새 accessToken 내려주기
+    return res.status(200).json({
+      ok: true,
+      accessToken,
+    });
   } catch (e) {
     next(e);
   }
