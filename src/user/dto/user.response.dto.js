@@ -11,6 +11,7 @@ export function toUserProfileDto(user) {
     grade: user.grade,
     gender: user.gender, // "Male" | "Female" | null
     is_completed: user.is_completed,
+    profile_image_url: user.profile_image_url ?? null,
     created_at: user.created_at,
     updated_at: user.updated_at,
   };

@@ -27,6 +27,7 @@ export const searchUsersByKeyword = async (keyword, excludeUserId) => {
       nickname: true,
       grade: true,
       gender: true,
+      profile_image_url: true,
     },
     take: 20,
   });
@@ -196,6 +197,7 @@ export const findUserProfileById = async (userId) => {
       nickname: true,
       grade: true,
       gender: true,
+      profile_image_url: true,
     },
   });
 };
