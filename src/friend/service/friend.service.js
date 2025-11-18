@@ -33,7 +33,7 @@ const toUserSummaryDto = (user) => ({
   nickname: user.nickname,
   grade: user.grade ?? null,
   gender: user.gender ?? null,
-  profile_image_url: u.profile_image_url ?? null,
+  profile_image_url: user.profile_image_url ?? null,
 });
 
 const toFriendRequestDto = (req) => ({
